@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="HDWave">
+        <!--最小半径-->
+        <attr name="minRadius" format="float"/>
+        <!--最大半径-->
+        <attr name="maxRadius" format="float"/>
+        <!--绘制时长-->
+        <attr name="duration" format="integer"/>
+        <!--创建速度-->
+        <attr name="speed" format="integer"/>
+        <!--波纹颜色-->
+        <attr name="color" format="color"/>
+        <!--设置是否默认-->
+        <attr name="maxRadiusSet" format="boolean"/>
+         <!--如果没有设置maxRadius，可maxRadius = 最小长度 * maxRadiusRate;-->
+        <attr name="maxRadiusRate" format="float"/>
+
+    </declare-styleable>
+
+</resources>

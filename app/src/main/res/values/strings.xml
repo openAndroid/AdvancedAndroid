@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AdvancedAndroid</string>
+
+    <string-array name="main_launch">
+        <item>Animation,R.drawable.icon,com.mobile.android.hd.animation.wave</item>
+        <item>MaterailDesign,R.drawable.icon,com.mobile.android.hd.metraildesign</item>
+    </string-array>
+</resources>
