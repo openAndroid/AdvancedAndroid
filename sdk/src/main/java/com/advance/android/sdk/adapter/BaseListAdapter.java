@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.widget.BaseAdapter;
 
+import com.advance.android.sdk.trace.TimeTrace;
+
 import java.util.List;
 
 /**
@@ -89,5 +91,18 @@ public abstract class BaseListAdapter<T> extends BaseAdapter {
 
     protected int getColor(int colorRes) {
         return inflater.getContext().getResources().getColor(colorRes);
+    }
+
+    public static void main(String[] args){
+        testAnnotatedMethod();
+
+    }
+    @TimeTrace
+    private static void testAnnotatedMethod() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

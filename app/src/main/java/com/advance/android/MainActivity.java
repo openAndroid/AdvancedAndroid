@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.advance.android.model.LauncherInfo;
 import com.advance.android.sdk.adapter.BaseRecyclerAdapter;
+import com.advance.android.sdk.trace.TimeTrace;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,6 +116,19 @@ public class MainActivity extends AppCompatActivity {
         }
         return infos;
 
+    }
+    public static void main(String[] args){
+        testAnnotatedMethod();
+        System.out.println("哈哈哈哈哈");
+
+    }
+    @TimeTrace
+    private static void testAnnotatedMethod() {
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 }
