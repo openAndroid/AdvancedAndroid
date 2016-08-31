@@ -7,6 +7,10 @@
         android:label="@string/app_name"
         android:supportsRtl="true">
         <activity android:name=".waveview.test.AAWaveActivity">
+            <intent-filter>
+                <action android:name="com.mobile.android.hd.animation.wave"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
         </activity>
     </application>
 
