@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.antfortune.freeline.FreelineCore;
 
+
 /**
  * ——————————————————————————————————
  * 作者: shuaizhimin www.shuaizm.com
@@ -17,5 +18,6 @@ public class AAAplication extends Application{
     public void onCreate() {
         super.onCreate();
         FreelineCore.init(this);
+
     }
 }

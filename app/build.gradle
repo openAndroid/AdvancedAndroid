@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.antfortune.freeline'
-
 android {
     compileSdkVersion 24
     buildToolsVersion "24.0.1"
@@ -18,17 +17,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
     freeline {
         hack true
     }
+
+
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.antfortune.freeline:runtime:0.5.4'
-    compile 'com.android.support:appcompat-v7:24.1.1'
     compile project(':animation')
     compile project(':materialdesign')
     compile project(':sdk')

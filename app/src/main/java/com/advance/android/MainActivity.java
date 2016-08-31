@@ -3,6 +3,7 @@ package com.advance.android;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,6 +21,8 @@ import com.advance.android.sdk.adapter.BaseRecyclerAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+import hugo.weaving.DebugLog;
+
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG="MainActivity";
@@ -31,8 +34,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
+        getName("shuai","zhimin");
     }
-
     private void initView() {
         mRecyclerView = (RecyclerView) findViewById(R.id.mRecylerView);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -40,7 +43,11 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.setData(getInfos());
     }
-
+    @DebugLog
+    public String getName(String first, String last) {
+        SystemClock.sleep(15); // Don't ever really do this!
+        return first + " " + last;
+    }
 
     public class RecyclerAdapter extends BaseRecyclerAdapter<LauncherInfo, RecyclerAdapter.ViewHolder> {
 
