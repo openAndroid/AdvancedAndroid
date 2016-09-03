@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
+        Log.e(TAG,"sssssss");
         getName("shuai","zhimin");
     }
     private void initView() {
