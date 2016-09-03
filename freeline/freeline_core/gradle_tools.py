@@ -41,7 +41,7 @@ class GradleScanChangedFilesCommand(ScanChangedFilesCommand):
 
         for module_name, module_info in self.project_info.iteritems():
             self._changed_files[module_name] = {'libs': [], 'assets': [], 'res': [], 'src': [], 'manifest': [],
-                                                'config': []}
+                                                'config': [], 'so': [], 'cpp': []}
             self._scan_module_changes(module_name, module_info['path'])
 
         self._mark_changed_flag()
@@ -81,15 +81,28 @@ class GradleScanChangedFilesCommand(ScanChangedFilesCommand):
             if os.path.isdir(lib_dir_path):
                 for dirpath, dirnames, files in os.walk(lib_dir_path):
                     for fn in files:
-                        fpath = os.path.join(dirpath, fn)
-                        if self.__check_changes(module_name, fpath, module_cache):
-                            self._changed_files[module_name]['libs'].append(fpath)
+                        if fn.endswith(".jar"):
+                            fpath = os.path.join(dirpath, fn)
+                            if self.__check_changes(module_name, fpath, module_cache):
+                                self._changed_files[module_name]['libs'].append(fpath)
 
         if module_name in self._config['project_source_sets']:
             # scan manifest
             manifest = self._config['project_source_sets'][module_name]['main_manifest_path']
             if self.__check_changes(module_name, manifest, module_cache):
                 self._changed_files[module_name]['manifest'].append(manifest)
+
+            # scan native so
+            if 'main_jniLibs_directory' in self._config['project_source_sets'][module_name]:
+                native_so_dirs = self._config['project_source_sets'][module_name]['main_jniLibs_directory']
+                for native_so_dir in native_so_dirs:
+                    if os.path.exists(native_so_dir):
+                        for dirpath, dirnames, files in os.walk(native_so_dir):
+                            for fn in files:
+                                if fn.endswith(".so"):
+                                    fpath = os.path.join(dirpath, fn)
+                                    if self.__check_changes(module_name, fpath, module_cache):
+                                        self._changed_files[module_name]['so'].append(fpath)
 
             # scan assets
             assets_dirs = self._config['project_source_sets'][module_name]['main_assets_directory']
@@ -191,12 +204,23 @@ class GenerateFileStatTask(Task):
             if os.path.isdir(lib_dir_path):
                 for dirpath, dirnames, files in os.walk(lib_dir_path):
                     for fn in files:
-                        self.__save_stat(module_name, os.path.join(dirpath, fn))
+                        if fn.endswith(".jar"):
+                            self.__save_stat(module_name, os.path.join(dirpath, fn))
 
         # scan assets
         if module_name in self._config['project_source_sets']:
             # scan manifest
             self.__save_stat(module_name, self._config['project_source_sets'][module_name]['main_manifest_path'])
+
+            # scan native so
+            if 'main_jniLibs_directory' in self._config['project_source_sets'][module_name]:
+                native_so_dirs = self._config['project_source_sets'][module_name]['main_jniLibs_directory']
+                for native_so_dir in native_so_dirs:
+                    if os.path.exists(native_so_dir):
+                        for dirpath, dirnames, files in os.walk(native_so_dir):
+                            for fn in files:
+                                if fn.endswith(".so"):
+                                    self.__save_stat(module_name, os.path.join(dirpath, fn))
 
             assets_dirs = self._config['project_source_sets'][module_name]['main_assets_directory']
             for assets_dir in assets_dirs:
@@ -288,10 +312,16 @@ class GradleDirectoryFinder(android_tools.DirectoryFinder):
         if self._config is not None and 'product_flavor' in self._config:
             if self._module_name == self._config['main_project_name']:
                 if self._config['product_flavor'] == '' or self._config['product_flavor'] == 'debug':
-                    return os.path.join(self.get_base_gen_dir(), 'manifests', 'full', 'debug', 'AndroidManifest.xml')
+                    path = os.path.join(self.get_base_gen_dir(), 'manifests', 'full', 'debug', 'AndroidManifest.xml')
                 else:
-                    return os.path.join(self.get_base_gen_dir(), 'manifests', 'full', self._config['product_flavor'],
+                    path = os.path.join(self.get_base_gen_dir(), 'manifests', 'full', self._config['product_flavor'],
                                         'debug', 'AndroidManifest.xml')
+                if os.path.exists(path):
+                    return path
+        path = android_tools.find_manifest(os.path.join(self.get_base_gen_dir(), 'manifests'))
+        if path and os.path.exists(path):
+            Logger.debug("find manifest: {}".format(path))
+            return path
         return android_tools.get_manifest_path(self._module_path)
 
     def get_dst_r_dir(self):
@@ -369,6 +399,7 @@ class GradleSyncTask(android_tools.SyncTask):
             # self._client.push_full_res_pack()
             self._client.sync_incremental_res()
             self._client.sync_incremental_dex()
+            self._client.sync_incremental_native()
             self._client.sync_state(self._is_need_restart)
             self._client.close_connection()
         except FreelineException as e:
@@ -413,6 +444,20 @@ class GradleSyncClient(SyncClient):
                 raise FreelineException('You may need a clean build.',
                                         'full resource pack not found: {}'.format(full_pack_path))
 
+    def sync_incremental_native(self):
+        if self._is_need_sync_native():
+            self.debug('start to sync native file...')
+            native_zip_path = get_sync_native_file_path(self._config['build_cache_dir'])
+            with open(native_zip_path, "rb") as fp:
+                url = "http://127.0.0.1:{}/pushNative?restart".format(self._port)
+                self.debug("pushNative: "+url)
+                result, err, code = curl(url, body=fp.read())
+                self.debug("code: {}".format(code))
+                # todo 此处返回-1 暂时先忽略
+                # if code != 0:
+                #     from exceptions import FreelineException
+                #     raise FreelineException("sync native dex failed.",err.message)
+
     def sync_incremental_res(self):
         mode = 'increment' if self._is_art else 'full'
         can_sync_inc_res = False
@@ -454,6 +499,9 @@ class GradleSyncClient(SyncClient):
                 return True
         return False
 
+    def _is_need_sync_native(self):
+        return os.path.exists(os.path.join(self._config['build_cache_dir'], 'natives.zip'))
+
 
 class GradleCleanCacheTask(android_tools.CleanCacheTask):
     def __init__(self, cache_dir, project_info):
@@ -466,11 +514,14 @@ class GradleCleanCacheTask(android_tools.CleanCacheTask):
             for fn in files:
                 if fn.endswith('.sync'):
                     os.remove(os.path.join(dirpath, fn))
-                    module = fn.split('.')[0]
+                    module = fn[:fn.rfind('.')]
                     self._refresh_public_files(module)
 
-                if fn.endswith('increment.dex') or fn.endswith('.rflag') or fn.endswith('.restart'):
-                    os.remove(os.path.join(dirpath, fn))
+                if fn.endswith('increment.dex') or fn.endswith('.rflag') or fn.endswith('.restart') or fn.endswith(
+                        'natives.zip'):
+                    fpath = os.path.join(dirpath, fn)
+                    self.debug("remove cache: {}".format(fpath))
+                    os.remove(fpath)
 
     def _refresh_public_files(self, module):
         finder = GradleDirectoryFinder(module, self._project_info[module]['path'], self._cache_dir,
@@ -599,6 +650,10 @@ def get_base_resource_path(cache_dir):
     return os.path.join(cache_dir, 'base-res.so')
 
 
+def get_sync_native_file_path(cache_dir):
+    return os.path.join(cache_dir, 'natives.zip')
+
+
 def get_classpath_by_src_path(module, sdir, src_path):
     if src_path:
         target_dir = os.path.join(module, 'build', 'intermediates', 'classes', 'debug')
@@ -663,16 +718,17 @@ def get_project_info(config):
 
     for module in modules:
         if module['name'] in config['project_source_sets']:
-            local_deps = project_info[module['name']]['local_module_dep']
-            for dep in project_info[module['name']]['local_module_dep']:
-                if dep in project_info:
-                    local_deps.extend(project_info[dep]['local_module_dep'])
-            local_deps = list(set(local_deps))
-            project_info[module['name']]['local_module_dep'] = []
-            for item in local_deps:
-                local_dep_name = get_module_name(item)
-                if local_dep_name in project_info:
-                    project_info[module['name']]['local_module_dep'].append(local_dep_name)
+            if 'module_dependencies' not in config:
+                local_deps = project_info[module['name']]['local_module_dep']
+                for dep in project_info[module['name']]['local_module_dep']:
+                    if dep in project_info:
+                        local_deps.extend(project_info[dep]['local_module_dep'])
+                local_deps = list(set(local_deps))
+                project_info[module['name']]['local_module_dep'] = []
+                for item in local_deps:
+                    local_dep_name = get_module_name(item)
+                    if local_dep_name in project_info:
+                        project_info[module['name']]['local_module_dep'].append(local_dep_name)
 
             res_dependencies_path = os.path.join(config['build_cache_dir'], module['name'],
                                                  'resources_dependencies.json')

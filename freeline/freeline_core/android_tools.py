@@ -114,6 +114,9 @@ class AndroidSyncClient(SyncClient):
     def __init__(self, is_art, config):
         SyncClient.__init__(self, is_art, config)
 
+    def sync_incremental_native(self):
+        pass
+
     def sync_incremental_res(self):
         pass
 
@@ -630,7 +633,8 @@ class CleanCacheTask(Task):
                         # merge_public_file_with_old(public_xml_path, ids_xml_path,
                         #                            self._project_info[pro]['children_bundle_path'])
 
-                if fn.endswith('increment.dex') or fn.endswith('.rflag') or fn.endswith('.restart'):
+                if fn.endswith('increment.dex') or fn.endswith('.rflag') or fn.endswith('.restart') or fn.endswith(
+                        'natives.zip'):
                     os.remove(os.path.join(dirpath, fn))
 
 
@@ -646,6 +650,14 @@ def find_r_file(target_dir, package_name=None):
                 else:
                     if package_name in path:
                         return path
+    return None
+
+
+def find_manifest(target_dir):
+    for dirpath, dirnames, files in os.walk(target_dir):
+        for fn in files:
+            if fn == 'AndroidManifest.xml':
+                return os.path.join(dirpath, fn)
     return None
 
 

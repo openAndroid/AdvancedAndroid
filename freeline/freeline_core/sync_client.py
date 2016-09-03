@@ -93,20 +93,27 @@ class SyncClient(object):
         self.debug("apktime path: " + apktime_path)
         sync_value = get_sync_value(apktime_path, self._cache_dir)
         self.debug('your local sync value is: {}'.format(sync_value))
+        uuid = self.get_uuid()
+        self.debug('your local uuid value is: {}'.format(uuid))
 
         for i in range(0, 10):
             cexec([self._adb, 'forward', 'tcp:{}'.format(41128 + i), 'tcp:{}'.format(41128 + i)], callback=None)
-            url = 'http://127.0.0.1:{}/checkSync?sync={}'.format(41128 + i, sync_value)
+            url = 'http://127.0.0.1:{}/checkSync?sync={}&uuid={}'.format(41128 + i, sync_value, uuid)
             result, err, code = curl(url)
             if code == 0 and result is not None:
-                port = 41128 + i
-                if result and int(result) == 0:
-                    self.debug('server result is {}'.format(result))
+                result = int(result)
+                self.debug('server result is {}'.format(result))
+                if result == 0:
                     self.debug('check sync value failed, maybe you need a clean build.')
                     from exceptions import CheckSyncStateException
                     raise CheckSyncStateException('check sync value failed, maybe you need a clean build.',
                                                   'NO CAUSE')
-                break
+                elif result == -1:
+                    continue
+                else:
+                    port = 41128 + i
+                    break
+
         for i in range(0, 10):
             if (41128 + i) != port:
                 cexec([self._adb, 'forward', '--remove', 'tcp:{}'.format(41128 + i)], callback=None)
@@ -115,6 +122,9 @@ class SyncClient(object):
 
     def sync_incremental_res(self):
         raise NotImplementedError  # TODO: sync single res.pack
+
+    def sync_incremental_native(self):
+        raise NotImplementedError
 
     def sync_incremental_dex(self):
         dex_path = android_tools.get_incremental_dex_path(self._cache_dir)
@@ -131,9 +141,11 @@ class SyncClient(object):
             self.debug('no {} exists.'.format(dex_path))
 
     def sync_state(self, is_need_restart):
-        if self._is_need_sync_dex() or self._is_need_sync_res():
+        if self._is_need_sync_dex() or self._is_need_sync_res() or self._is_need_sync_native():
             self.debug('start to sync close longlink...')
             restart_char = 'restart' if is_need_restart else 'no'
+            if self._is_need_sync_native():
+                restart_char = 'restart'
             update_last_sync_ticket(self._cache_dir)
             url = 'http://127.0.0.1:{}/closeLongLink?{}&lastSync={}'.format(self._port, restart_char,
                                                                             get_last_sync_ticket(self._cache_dir))
@@ -144,6 +156,13 @@ class SyncClient(object):
                 rollback_last_sync_ticket(self._cache_dir)
                 from exceptions import FreelineException
                 raise FreelineException('sync state failed.', err.message)
+
+    def get_uuid(self):
+        from utils import md5string
+        if 'debug_package' in self._config and self._config['debug_package'] != '':
+            return md5string(self._config['debug_package'])
+        else:
+            return md5string(self._config['package'])
 
     def wake_up(self):
         cexec([self._adb, 'shell', 'am', 'start', '-n', '{}/{}'.format(self._config['package'],
@@ -166,6 +185,9 @@ class SyncClient(object):
         return os.path.exists(android_tools.get_incremental_dex_path(self._cache_dir))
 
     def _is_need_sync_res(self):
+        raise NotImplementedError
+
+    def _is_need_sync_native(self):
         raise NotImplementedError
 
 

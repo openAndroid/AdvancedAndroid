@@ -8,7 +8,7 @@ import android_tools
 from build_commands import CompileCommand, IncAaptCommand, IncJavacCommand, IncDexCommand
 from builder import IncrementalBuilder, Builder
 from gradle_tools import get_project_info, GradleDirectoryFinder, GradleSyncClient, GradleSyncTask, \
-    GradleCleanCacheTask, GradleMergeDexTask
+    GradleCleanCacheTask, GradleMergeDexTask, get_sync_native_file_path
 from task import find_root_tasks, find_last_tasks, Task
 from utils import get_file_content, write_file_content, is_windows_system
 from tracing import Tracing
@@ -41,6 +41,7 @@ class GradleIncBuilder(IncrementalBuilder):
         self._is_art = android_tools.get_device_sdk_version_by_adb(Builder.get_adb(self._config)) > 20
         # merge all resources modified files to main resources
         self.__merge_res_files()
+        self.__merge_native_files()
 
     def generate_sorted_build_tasks(self):
         """
@@ -75,6 +76,21 @@ class GradleIncBuilder(IncrementalBuilder):
                 if key == 'res' or key == 'assets':
                     main_res[key].extend(files)
         self._changed_files['projects'][self._config['main_project_name']] = main_res
+
+    def __merge_native_files(self):
+        so_files = []
+        for module, file_dict in self._changed_files['projects'].iteritems():
+            for key, files in file_dict.iteritems():
+                if key == 'so':
+                    for m in range(len(files)):
+                        self.debug('append {} to native queue'.format(files[m]))
+                        so_files.append(files[m])
+
+        if len(so_files) > 0:
+            from zipfile import ZipFile
+            with ZipFile(get_sync_native_file_path(self._config['build_cache_dir']), "w") as nativeZip:
+                for m in range(len(so_files)):
+                    nativeZip.write(so_files[m])
 
     def __is_any_modules_have_res_changed(self):
         for key, value in self._changed_files['projects'].iteritems():
@@ -374,8 +390,9 @@ class GradleIncBuildInvoker(android_tools.AndroidIncBuildInvoker):
             if is_windows_system():
                 main_r_path = os.path.join(self._finder.get_backup_dir(),
                                            self._module_info['packagename'].replace('.', os.sep), 'R.java')
-                content = self.__fix_unicode_parse_error(get_file_content(main_r_path), main_r_path)
-                write_file_content(main_r_path, content)
+                if os.path.exists(main_r_path):
+                    content = self.__fix_unicode_parse_error(get_file_content(main_r_path), main_r_path)
+                    write_file_content(main_r_path, content)
 
     def fill_classpaths(self):
         # classpaths:
@@ -459,7 +476,7 @@ class GradleIncBuildInvoker(android_tools.AndroidIncBuildInvoker):
             finder = self._finder
 
         r_path = android_tools.find_r_file(finder.get_dst_r_dir(), package_name=package_name)
-        if os.path.exists(r_path):
+        if r_path and os.path.exists(r_path):
             target_dir = os.path.join(self.__get_freeline_backup_r_dir(), package_name.replace('.', os.sep))
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
