@@ -1,1 +1,1 @@
-include ':app', ':sdk', ':materialdesign', ':animation'
+include ':app', ':sdk', ':materialdesign', ':animation', ':uicomp'
