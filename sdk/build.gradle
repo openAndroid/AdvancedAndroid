@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:design:24.1.1'
     compile 'com.android.support:recyclerview-v7:24.1.1'
     compile 'com.antfortune.freeline:runtime:0.5.4'
+    compile 'com.squareup.okhttp3:okhttp:3.4.1'
 }
