@@ -1,8 +1,22 @@
 <resources>
-    <string name="app_name">AdvancedAndroid</string>
+    <string name="app_name">Android进阶</string>
+
+
+
+
 
     <string-array name="main_launch">
         <item>Animation,R.drawable.icon,com.mobile.android.hd.animation.wave</item>
         <item>MaterailDesign,R.drawable.icon,com.mobile.android.hd.metraildesign</item>
     </string-array>
+
+
+    <!--home-->
+    <string name="tab_home">首页</string>
+    <!--message-->
+    <string name="tab_message">信息</string>
+    <!--owner-->
+    <string name="tab_owner">关于</string>
+    <!--setting-->
+    <string name="tab_setting">设置</string>
 </resources>

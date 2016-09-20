@@ -1,5 +1,14 @@
 package com.advance.android.ui.setting;
 
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.advance.android.R;
+import com.advance.android.base.BaseFragment;
+
 /**
  * ——————————————————————————————————
  * 作者: shuaizhimin www.shuaizm.com
@@ -8,5 +17,11 @@ package com.advance.android.ui.setting;
  * 时间: 12:43
  * ——————————————————————————————————
  */
-public class SettingFragment {
+public class SettingFragment extends BaseFragment{
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.setting_fragment, container, false);
+        return view;
+    }
 }

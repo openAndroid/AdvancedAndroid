@@ -29,4 +29,5 @@ dependencies {
     compile project(':animation')
     compile project(':materialdesign')
     compile project(':sdk')
+    compile project(':uicomp')
 }
