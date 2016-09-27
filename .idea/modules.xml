@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/materialdesign/materialdesign.iml" filepath="$PROJECT_DIR$/materialdesign/materialdesign.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdk/sdk.iml" filepath="$PROJECT_DIR$/sdk/sdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/uicomp/uicomp.iml" filepath="$PROJECT_DIR$/uicomp/uicomp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/uicomp/uicomp.iml" filepath="$PROJECT_DIR$/uicomp/uicomp.iml" />
     </modules>
   </component>
 </project>
