@@ -15,6 +15,6 @@ public abstract class StringCallback extends AACallBack<String> {
         if (response != null && response.body() != null) {
             return response.body().string();
         }
-        return null;
+        return "";
     }
 }

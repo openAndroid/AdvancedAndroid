@@ -88,10 +88,10 @@ public class AALog {
         String threadName = Thread.currentThread().getName();
         long threadId = Thread.currentThread().getId();
         if (!TextUtils.isEmpty(threadName)) {
-            builder.append("====[ ThreadName:" + threadName);
+            builder.append(" ----> [ ThreadName:" + threadName);
         }
         builder.append(" ThreadId:" + threadId);
-        builder.append(" ====");
+        builder.append(" ---->");
         return builder.toString();
     }
 

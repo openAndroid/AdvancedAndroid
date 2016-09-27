@@ -34,7 +34,7 @@ public class HttpTestActivity extends AppCompatActivity {
     }
 
     void doGet(){
-        AAOkHttp.getInstance().doGet().url("http://m.zhuomuniao.cc/ZMNVaccine/getFocusArticle").excute(new StringCallback() {
+        AAOkHttp.getInstance().doGet().url("http://192.168.4.62:8080/index").excute(new StringCallback() {
             @Override
             public void onSuccess(String s, Call call, Response response) {
                 AALog.e("get",""+s);
