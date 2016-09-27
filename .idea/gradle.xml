@@ -15,16 +15,7 @@
             <option value="$PROJECT_DIR$/uicomp" />
           </set>
         </option>
-        <option name="myModules">
-          <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/animation" />
-            <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/materialdesign" />
-            <option value="$PROJECT_DIR$/sdk" />
-            <option value="$PROJECT_DIR$/uicomp" />
-          </set>
-        </option>
+        <option name="resolveModulePerSourceSet" value="false" />
       </GradleProjectSettings>
     </option>
   </component>
